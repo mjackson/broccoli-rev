@@ -9,7 +9,7 @@ var rev = require('broccoli-rev');
 
 var revvedTree = rev(myTree, {
 
-  // The length to use for the has that is appended to the filename
+  // The length to use for the hash that is appended to the filename
   // immediately before the file extension. Defaults to 8.
   hashLength: 10,
 
