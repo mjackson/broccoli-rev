@@ -6,12 +6,14 @@ var mkdirp = require('mkdirp');
 
 module.exports = Rev;
 
-function Rev(inputTree, manifestFile, hashLength) {
+function Rev(inputTree, options) {
   if (!(this instanceof Rev))
     return new Rev(inputTree, hashLength);
 
-  this.hashLength = hashLength || 8;
-  this.manifestFile = manifestFile || 'rev-manifest.json';
+  options = options || {};
+
+  this.hashLength = options.hashLength || 8;
+  this.manifestFile = options.manifestFile || 'rev-manifest.json';
   this.inputTree = inputTree;
 }
 
