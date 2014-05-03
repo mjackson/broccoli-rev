@@ -1,0 +1,32 @@
+{
+  "name": "broccoli-rev",
+  "version": "0.0.0",
+  "description": "Appends a checksum to the names of files",
+  "main": "index.js",
+  "dependencies": {
+    "broccoli-writer": "^0.1.1",
+    "broccoli-kitchen-sink-helpers": "^0.2.2",
+    "mkdirp": "^0.4.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mjijackson/broccoli-rev"
+  },
+  "keywords": [
+    "broccoli",
+    "broccoli-plugin",
+    "broccoliplugin",
+    "plugin",
+    "rev",
+    "revision"
+  ],
+  "author": "Michael Jackson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mjijackson/broccoli-rev/issues"
+  },
+  "homepage": "https://github.com/mjijackson/broccoli-rev"
+}
