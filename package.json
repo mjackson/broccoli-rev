@@ -1,7 +1,7 @@
 {
   "name": "broccoli-rev",
   "version": "0.0.0",
-  "description": "Appends a checksum to the names of files",
+  "description": "A Broccoli plugin that adds the checksum of files to the output filename",
   "main": "index.js",
   "dependencies": {
     "broccoli-writer": "^0.1.1",

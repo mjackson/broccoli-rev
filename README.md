@@ -1,6 +1,6 @@
 ## broccoli-rev
 
-Add the checksum of files in a tree to the output filename.
+A [Broccoli](https://github.com/joliss/broccoli) plugin that adds the checksum of files to the output filename.
 
 ### Usage
 
