@@ -60,13 +60,13 @@ Rev.prototype.write = function (readTree, destDir) {
   });
 };
 
+function addSuffixBeforeExt(fileName, suffix) {
+  var ext = path.extname(fileName);
+  return path.join(path.dirname(fileName), path.basename(fileName, ext) + suffix + ext);
+}
+
 var crypto = require('crypto');
 
 function makeHash(buffer) {
   return crypto.createHash('md5').update(buffer).digest('hex');
-}
-
-function addSuffixBeforeExt(fileName, suffix) {
-  var ext = path.extname(fileName);
-  return path.join(path.dirname(fileName), path.basename(fileName, ext) + suffix + ext);
 }
