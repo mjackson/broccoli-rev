@@ -8,7 +8,7 @@ module.exports = Rev;
 
 function Rev(inputTree, options) {
   if (!(this instanceof Rev))
-    return new Rev(inputTree, hashLength);
+    return new Rev(inputTree, options);
 
   options = options || {};
 
