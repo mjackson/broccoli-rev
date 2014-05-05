@@ -6,7 +6,8 @@
   "dependencies": {
     "broccoli-writer": "^0.1.1",
     "broccoli-kitchen-sink-helpers": "^0.2.2",
-    "mkdirp": "^0.4.0"
+    "mkdirp": "^0.4.0",
+    "glob": "^3.2.9"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

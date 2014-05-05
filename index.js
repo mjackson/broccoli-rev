@@ -1,8 +1,9 @@
 var fs = require('fs');
 var path = require('path');
+var glob = require('glob');
+var mkdirp = require('mkdirp');
 var Writer = require('broccoli-writer');
 var helpers = require('broccoli-kitchen-sink-helpers');
-var mkdirp = require('mkdirp');
 
 module.exports = Rev;
 
@@ -26,32 +27,32 @@ Rev.prototype.write = function (readTree, destDir) {
   var inputTree = this.inputTree;
 
   return readTree(inputTree).then(function (srcDir) {
-    var inputFiles = helpers.multiGlob([ '**' ], { cwd: srcDir });
+    var inputFiles = glob.sync('**', { cwd: srcDir });
     var manifestMap = {};
 
-    inputFiles.forEach(function (inputFile) {
-      var originalInputFile = inputFile;
-      var srcFile = path.join(srcDir, inputFile);
-      var srcStat = fs.lstatSync(srcFile);
+    inputFiles.forEach(function (file) {
+      var stat = fs.lstatSync(file);
+      var srcFile = path.join(srcDir, file);
 
       var hash;
-      if (srcStat.isFile()) {
+      if (stat.isFile()) {
         hash = makeHash(fs.readFileSync(srcFile));
-      } else if (srcStat.isSymbolicLink()) {
+      } else if (stat.isSymbolicLink()) {
         hash = makeHash(fs.readlinkSync(srcFile));
       } else {
         return;
       }
 
       // Append "-hash" to the file name, just before the extension.
-      inputFile = addSuffixBeforeExt(inputFile, '-' + hash.substring(0, hashLength));
+      var hashedFile = addSuffixBeforeExt(file, '-' + hash.substring(0, hashLength));
 
-      var destFile = path.join(destDir, inputFile);
+      var destFile = path.join(destDir, hashedFile);
 
       mkdirp.sync(path.dirname(destFile));
-      helpers.copyPreserveSync(srcFile, destFile, srcStat);
+      helpers.copyPreserveSync(srcFile, destFile, stat);
 
-      manifestMap[originalInputFile] = inputFile;
+      // Record the hashed file name in the manifest.
+      manifestMap[file] = hashedFile;
     });
 
     var manifestJson = JSON.stringify(manifestMap, null, 2);
