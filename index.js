@@ -57,7 +57,11 @@ Rev.prototype.write = function (readTree, destDir) {
 
     var manifestJson = JSON.stringify(manifestMap, null, 2);
 
-    fs.writeFileSync(path.join(destDir, manifestFile), manifestJson);
+    // Put the manifest file in destDir by default.
+    if (isRelativePath(manifestFile))
+      manifestFile = path.join(destDir, manifestFile);
+
+    fs.writeFileSync(manifestFile, manifestJson);
   });
 };
 
@@ -70,4 +74,8 @@ var crypto = require('crypto');
 
 function makeHash(buffer) {
   return crypto.createHash('md5').update(buffer).digest('hex');
+}
+
+function isRelativePath(p) {
+  return typeof p === 'string' && p.charAt(0) !== path.sep;
 }
