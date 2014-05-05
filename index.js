@@ -1,6 +1,5 @@
 var fs = require('fs');
 var path = require('path');
-var glob = require('glob');
 var mkdirp = require('mkdirp');
 var Writer = require('broccoli-writer');
 var helpers = require('broccoli-kitchen-sink-helpers');
@@ -27,17 +26,17 @@ Rev.prototype.write = function (readTree, destDir) {
   var inputTree = this.inputTree;
 
   return readTree(inputTree).then(function (srcDir) {
-    var inputFiles = glob.sync('**', { cwd: srcDir });
+    var inputFiles = helpers.multiGlob([ '**' ], { cwd: srcDir });
     var manifestMap = {};
 
     inputFiles.forEach(function (file) {
-      var stat = fs.lstatSync(file);
       var srcFile = path.join(srcDir, file);
+      var srcStat = fs.lstatSync(srcFile);
 
       var hash;
-      if (stat.isFile()) {
+      if (srcStat.isFile()) {
         hash = makeHash(fs.readFileSync(srcFile));
-      } else if (stat.isSymbolicLink()) {
+      } else if (srcStat.isSymbolicLink()) {
         hash = makeHash(fs.readlinkSync(srcFile));
       } else {
         return;
@@ -49,7 +48,7 @@ Rev.prototype.write = function (readTree, destDir) {
       var destFile = path.join(destDir, hashedFile);
 
       mkdirp.sync(path.dirname(destFile));
-      helpers.copyPreserveSync(srcFile, destFile, stat);
+      helpers.copyPreserveSync(srcFile, destFile, srcStat);
 
       // Record the hashed file name in the manifest.
       manifestMap[file] = hashedFile;
