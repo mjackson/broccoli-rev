@@ -4,9 +4,9 @@
   "description": "A Broccoli plugin that adds the checksum of files to the output filename",
   "main": "index.js",
   "dependencies": {
+    "mkdirp": "^0.4.1",
     "broccoli-writer": "^0.1.1",
     "broccoli-kitchen-sink-helpers": "^0.2.2",
-    "mkdirp": "^0.4.0",
     "handlebars": "^2.0.0-alpha.2"
   },
   "scripts": {
