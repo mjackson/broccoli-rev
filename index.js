@@ -13,7 +13,7 @@ function Rev(inputTree, options) {
   options = options || {};
 
   this.hashLength = options.hashLength || 8;
-  this.manifestFile = options.manifestFile || 'rev-manifest.json';
+  this.manifestFile = options.manifestFile || '/rev-manifest.json';
   this.inputTree = inputTree;
 }
 
@@ -23,20 +23,18 @@ Rev.prototype.constructor = Rev;
 Rev.prototype.write = function (readTree, destDir) {
   var hashLength = this.hashLength;
   var manifestFile = this.manifestFile;
-  var inputTree = this.inputTree;
 
-  return readTree(inputTree).then(function (srcDir) {
-    var inputFiles = helpers.multiGlob([ '**' ], { cwd: srcDir });
+  return readTree(this.inputTree).then(function (srcDir) {
     var manifestMap = {};
 
-    inputFiles.forEach(function (file) {
+    getFilesRecursively(srcDir, [ '**/*' ]).forEach(function (file) {
       var srcFile = path.join(srcDir, file);
-      var srcStat = fs.lstatSync(srcFile);
+      var stat = fs.lstatSync(srcFile);
 
       var hash;
-      if (srcStat.isFile()) {
+      if (stat.isFile()) {
         hash = makeHash(fs.readFileSync(srcFile));
-      } else if (srcStat.isSymbolicLink()) {
+      } else if (stat.isSymbolicLink()) {
         hash = makeHash(fs.readlinkSync(srcFile));
       } else {
         return;
@@ -44,11 +42,10 @@ Rev.prototype.write = function (readTree, destDir) {
 
       // Append "-hash" to the file name, just before the extension.
       var hashedFile = addSuffixBeforeExt(file, '-' + hash.substring(0, hashLength));
-
       var destFile = path.join(destDir, hashedFile);
 
       mkdirp.sync(path.dirname(destFile));
-      helpers.copyPreserveSync(srcFile, destFile, srcStat);
+      helpers.copyPreserveSync(srcFile, destFile, stat);
 
       // Record the hashed file name in the manifest.
       manifestMap[file] = hashedFile;
@@ -56,11 +53,72 @@ Rev.prototype.write = function (readTree, destDir) {
 
     var manifestJson = JSON.stringify(manifestMap, null, 2);
 
-    // Put the manifest file in destDir by default.
-    if (isRelativePath(manifestFile))
-      manifestFile = path.join(destDir, manifestFile);
+    fs.writeFileSync(path.join(destDir, manifestFile), manifestJson);
+  });
+};
 
-    fs.writeFileSync(manifestFile, manifestJson);
+// Expose.
+Rev.Rewriter = Rev.rewriter = Rewriter;
+
+function Rewriter(inputTree, options) {
+  if (!(this instanceof Rewriter))
+    return new Rewriter(inputTree, options);
+
+  options = options || {};
+
+  this.inputFile = options.inputFile;
+  this.outputFile = options.outputFile;
+  this.manifestFile = options.manifestFile || '/rev-manifest.json';
+  this.context = options.context || {};
+  this.inputTree = inputTree;
+}
+
+Rewriter.prototype = Object.create(Writer.prototype);
+Rewriter.prototype.constructor = Rewriter;
+
+Rewriter.prototype.write = function (readTree, destDir) {
+  var inputFile = this.inputFile;
+  var outputFile = this.outputFile;
+  var manifestFile = this.manifestFile;
+  var context = mergeProperties({}, this.context);
+
+  return readTree(this.inputTree).then(function (srcDir) {
+    var srcTemplateFile = path.join(srcDir, inputFile);
+    var srcManifestFile = path.join(srcDir, manifestFile);
+    var srcFiles = getFilesRecursively(srcDir, [ '**/*' ]);
+
+    var template = fs.readFileSync(srcTemplateFile, 'utf8');
+    var manifest = JSON.parse(fs.readFileSync(srcManifestFile, 'utf8'));
+
+    // Provide a "rev" helper to the template that returns the
+    // revved version of a given file path.
+    var options = {
+      helpers: {
+        rev: function (path) {
+          return manifest[path];
+        }
+      }
+    };
+
+    // Write the rendered template file.
+    fs.writeFileSync(path.join(destDir, outputFile), renderTemplate(template, context, options));
+
+    // Copy all other files verbatim.
+    srcFiles.forEach(function (file) {
+      var srcFile = path.join(srcDir, file);
+
+      // Ignore the template and manifest files.
+      if (srcFile === srcTemplateFile || srcFile === srcManifestFile)
+        return;
+
+      var destFile = path.join(destDir, file);
+      var stat = fs.lstatSync(srcFile);
+
+      if (stat.isFile() || stat.isSymbolicLink()) {
+        mkdirp.sync(path.dirname(destFile));
+        helpers.copyPreserveSync(srcFile, destFile, stat);
+      }
+    });
   });
 };
 
@@ -75,6 +133,21 @@ function makeHash(buffer) {
   return crypto.createHash('md5').update(buffer).digest('hex');
 }
 
-function isRelativePath(p) {
-  return typeof p === 'string' && p.charAt(0) !== path.sep;
+var Handlebars = require('handlebars');
+
+function renderTemplate(template, context, options) {
+  return Handlebars.compile(template)(context, options);
+}
+
+function getFilesRecursively(dir, globPatterns) {
+  return helpers.multiGlob(globPatterns, { cwd: dir });
+}
+
+function mergeProperties(object, properties) {
+  for (var property in properties) {
+    if (properties.hasOwnProperty(property))
+      object[property] = properties[property];
+  }
+
+  return object;
 }
