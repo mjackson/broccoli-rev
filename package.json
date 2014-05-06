@@ -1,6 +1,6 @@
 {
   "name": "broccoli-rev",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Broccoli plugin that adds the checksum of files to the output filename",
   "main": "index.js",
   "dependencies": {
