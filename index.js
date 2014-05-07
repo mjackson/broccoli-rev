@@ -12,6 +12,7 @@ function Rev(inputTree, options) {
 
   options = options || {};
 
+  this.revision = options.revision || null;
   this.hashLength = options.hashLength || 8;
   this.manifestFile = options.manifestFile || '/rev-manifest.json';
   this.inputTree = inputTree;
@@ -21,6 +22,7 @@ Rev.prototype = Object.create(Writer.prototype);
 Rev.prototype.constructor = Rev;
 
 Rev.prototype.write = function (readTree, destDir) {
+  var revision = this.revision;
   var hashLength = this.hashLength;
   var manifestFile = this.manifestFile;
 
@@ -31,24 +33,18 @@ Rev.prototype.write = function (readTree, destDir) {
       var srcFile = path.join(srcDir, file);
       var stat = fs.lstatSync(srcFile);
 
-      var hash;
-      if (stat.isFile()) {
-        hash = makeHash(fs.readFileSync(srcFile));
-      } else if (stat.isSymbolicLink()) {
-        hash = makeHash(fs.readlinkSync(srcFile));
-      } else {
+      if (!stat.isFile() && !stat.isSymbolicLink())
         return;
-      }
 
-      // Append "-hash" to the file name, just before the extension.
-      var hashedFile = addSuffixBeforeExt(file, '-' + hash.substring(0, hashLength));
-      var destFile = path.join(destDir, hashedFile);
+      var fileRev = revision || makeHash(getFileContents(srcFile, stat)).substring(0, hashLength);
+      var revvedFile = addSuffixBeforeExt(file, '-' + fileRev);
+      var destFile = path.join(destDir, revvedFile);
 
       mkdirp.sync(path.dirname(destFile));
       helpers.copyPreserveSync(srcFile, destFile, stat);
 
-      // Record the hashed file name in the manifest.
-      manifestMap[file] = hashedFile;
+      // Record the rev'd file name in the manifest.
+      manifestMap[file] = revvedFile;
     });
 
     var manifestJson = JSON.stringify(manifestMap, null, 2);
@@ -141,6 +137,10 @@ function renderTemplate(template, context, options) {
 
 function getFilesRecursively(dir, globPatterns) {
   return helpers.multiGlob(globPatterns, { cwd: dir });
+}
+
+function getFileContents(file, stat) {
+  return stat.isFile() ? fs.readFileSync(file, arguments[2]) : fs.readlinkSync(file, arguments[2]);
 }
 
 function mergeProperties(object, properties) {

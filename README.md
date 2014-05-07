@@ -13,8 +13,14 @@ var rev = require('broccoli-rev');
 
 var revvedTree = rev(myTree, {
 
+  // The revision number or string for this build, if all files should use
+  // the same revision. If not given, the revision for a given file is the
+  // MD5 checksum of its contents. Defaults to null.
+  revision: null,
+
   // The length to use for the hash that is appended to the filename
-  // immediately before the file extension. Defaults to 8.
+  // immediately before the file extension when using the file's checksum
+  // as its revision. Defaults to 8.
   hashLength: 8,
 
   // The name of a file in the destination directory that will be created
