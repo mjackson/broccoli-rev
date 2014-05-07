@@ -1,6 +1,6 @@
 {
   "name": "broccoli-rev",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A Broccoli plugin for adding revision checksums to file names",
   "main": "index.js",
   "dependencies": {
