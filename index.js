@@ -41,7 +41,7 @@ Rev.prototype.write = function (readTree, destDir) {
       var destFile = path.join(destDir, revvedFile);
 
       mkdirp.sync(path.dirname(destFile));
-      helpers.copyPreserveSync(srcFile, destFile, stat);
+      helpers.symlinkOrCopyPreserveSync(srcFile, destFile, stat);
 
       // Record the rev'd file name in the manifest.
       manifestMap[file] = revvedFile;
@@ -112,7 +112,7 @@ Rewriter.prototype.write = function (readTree, destDir) {
 
       if (stat.isFile() || stat.isSymbolicLink()) {
         mkdirp.sync(path.dirname(destFile));
-        helpers.copyPreserveSync(srcFile, destFile, stat);
+        helpers.symlinkOrCopyPreserveSync(srcFile, destFile, stat);
       }
     });
   });
