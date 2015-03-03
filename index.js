@@ -31,17 +31,18 @@ Rev.prototype.write = function (readTree, destDir) {
 
     getFilesRecursively(srcDir, [ '**/*' ]).forEach(function (file) {
       var srcFile = path.join(srcDir, file);
-      var stat = fs.lstatSync(srcFile);
+      var stat = fs.statSync(srcFile);
 
-      if (!stat.isFile() && !stat.isSymbolicLink())
+      if (!stat.isFile()) {
         return;
+      }
 
       var fileRev = revision || makeHash(getFileContents(srcFile, stat)).substring(0, hashLength);
       var revvedFile = addSuffixBeforeExt(file, '-' + fileRev);
       var destFile = path.join(destDir, revvedFile);
 
       mkdirp.sync(path.dirname(destFile));
-      helpers.copyPreserveSync(srcFile, destFile, stat);
+      helpers.symlinkOrCopyPreserveSync(srcFile, destFile, stat);
 
       // Record the rev'd file name in the manifest.
       manifestMap[file] = revvedFile;
@@ -108,11 +109,11 @@ Rewriter.prototype.write = function (readTree, destDir) {
         return;
 
       var destFile = path.join(destDir, file);
-      var stat = fs.lstatSync(srcFile);
+      var stat = fs.statSync(srcFile);
 
-      if (stat.isFile() || stat.isSymbolicLink()) {
+      if (stat.isFile()) {
         mkdirp.sync(path.dirname(destFile));
-        helpers.copyPreserveSync(srcFile, destFile, stat);
+        helpers.symlinkOrCopyPreserveSync(srcFile, destFile, stat);
       }
     });
   });
